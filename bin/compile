@@ -67,7 +67,8 @@ fi
 export NUGET_PACKAGES="${CACHE_DIR}/nuget/cache"
 
 info "publish ${PROJECT_FILE} for ${BUILD_CONFIGURATION} on ${OUTPUT_DIR}"
-dotnet publish $PROJECT_FILE --output ${BUILD_DIR}/${OUTPUT_DIR} --configuration ${BUILD_CONFIGURATION} --runtime linux-x64
+dotnet publish $PROJECT_FILE --output ${BUILD_DIR}/${OUTPUT_DIR} --configuration ${BUILD_CONFIGURATION} --runtime ubuntu-x64 --self-contained=true -p:UseAppHost=true
+chmod +x ${BUILD_DIR}/${OUTPUT_DIR}/${PROJECT_NAME}
 
 if [ -f ${BUILD_DIR}/Procfile ]; then
 	topic "WARNING"
@@ -75,6 +76,6 @@ if [ -f ${BUILD_DIR}/Procfile ]; then
 else
 	echo "Add web process to Procfile" | indent
 	cat << EOT >> ${BUILD_DIR}/Procfile
-web: cd \$HOME/heroku_output && ./${PROJECT_NAME}
+web: cd \$HOME/${OUTPUT_DIR} && ./${PROJECT_NAME}
 EOT
 fi
