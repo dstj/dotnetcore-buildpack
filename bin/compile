@@ -57,6 +57,9 @@ echo "publish ${PROJECT_FILE} for ${BUILD_CONFIGURATION}"
 dotnet publish $PROJECT_FILE --output ${BUILD_DIR}/heroku_output --configuration ${BUILD_CONFIGURATION} --runtime ubuntu-x64 --self-contained=true -p:UseAppHost=true
 chmod +x ${BUILD_DIR}/heroku_output/${PROJECT_NAME}
 
+echo "Cleanup dotnet SDK"
+cleanup_dotnet $BUILD_DIR
+
 if [ -f ${BUILD_DIR}/Procfile ] && grep -q '^web:' ${BUILD_DIR}/Procfile ; then
 	topic "WARNING"
 	echo "Be careful with custom Procfile" | indent
