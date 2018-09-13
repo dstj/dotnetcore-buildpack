@@ -56,7 +56,8 @@ fi
 export NUGET_PACKAGES="${CACHE_DIR}/nuget/cache"
 
 echo "publish ${PROJECT_FILE}"
-dotnet publish $PROJECT_FILE --output ${BUILD_DIR}/heroku_output --configuration Release --runtime linux-x64
+dotnet publish $PROJECT_FILE --output ${BUILD_DIR}/heroku_output --configuration Release --runtime ubuntu-x64 --self-contained=true -p:UseAppHost=true
+chmod +x ${BUILD_DIR}/heroku_output/${PROJECT_NAME}
 
 if [ ! -f ${BUILD_DIR}/Procfile ]; then
 	cat << EOT >> ${BUILD_DIR}/Procfile
