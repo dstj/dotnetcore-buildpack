@@ -45,30 +45,38 @@ if [ -f ${BUILD_DIR}/dotnet-tools.json ] || [ -f ${BUILD_DIR}/.config/dotnet-too
 	dotnet tool restore
 fi
 
-if [ -z ${PROJECT_FILE:-} ]; then
+if [ -f ${BUILD_DIR}/heroku_projects ]; then
+	source ${BUILD_DIR}/heroku_projects 
+fi
+
+if [ -z ${PROJECT_FILES:-} ]; then
 	PROJECT_FILE=$(x=$(dirname $(find ${BUILD_DIR} -maxdepth 5 -iname Startup.cs -o -iname Program.cs -o -iname Program.fs | head -1)); while [[ "$x" =~ $BUILD_DIR ]] ; do find "$x" -maxdepth 1 -name *.fsproj -o -name *.csproj; x=`dirname "$x"`; done)
+	PROJECT_FILES=(${PROJECT_FILE})
 fi
 
-topic "Project File"
-info $PROJECT_FILE
+topic "Project Files"
+info ${PROJECT_FILES[*]}
 
-if [ -z ${PROJECT_NAME:-} ]; then
-	PROJECT_NAME=$(basename ${PROJECT_FILE%.*})
-fi
+for PROJECT_FILE in ${PROJECT_FILES[@]}
+do
+	if [ -z ${PROJECT_NAME:-} ]; then
+		PROJECT_NAME=$(basename ${PROJECT_FILE%.*})
+	fi
 
-topic "Project Name"
-info $PROJECT_NAME
+	topic "Project Name"
+	info $PROJECT_NAME
 
-if [ -n "$(cat $PROJECT_FILE | grep 'netcoreapp2.0')" ]; then
-	topic "WARNING"
-	info "For netcoreapp2.0 use https://github.com/jincod/dotnetcore-buildpack#v2.1.200" | indent
-	info "More info https://github.com/jincod/dotnetcore-buildpack/issues/44" | indent
-fi
-export NUGET_PACKAGES="${CACHE_DIR}/nuget/cache"
+	if [ -n "$(cat $PROJECT_FILE | grep 'netcoreapp2.0')" ]; then
+		topic "WARNING"
+		info "For netcoreapp2.0 use https://github.com/jincod/dotnetcore-buildpack#v2.1.200" | indent
+		info "More info https://github.com/jincod/dotnetcore-buildpack/issues/44" | indent
+	fi
+	export NUGET_PACKAGES="${CACHE_DIR}/nuget/cache"
 
-info "publish ${PROJECT_FILE} for ${BUILD_CONFIGURATION} on ${OUTPUT_DIR}"
-dotnet publish $PROJECT_FILE --output ${BUILD_DIR}/${OUTPUT_DIR} --configuration ${BUILD_CONFIGURATION} --runtime linux-x64 --self-contained=true -p:UseAppHost=true -p:PublishReadyToRun=true -p:PublishReadyToRunShowWarnings=true
-chmod +x ${BUILD_DIR}/${OUTPUT_DIR}/${PROJECT_NAME}
+	info "publish ${PROJECT_FILE} for ${BUILD_CONFIGURATION} on ${OUTPUT_DIR}"
+	dotnet publish $PROJECT_FILE --output ${BUILD_DIR}/${OUTPUT_DIR} --configuration ${BUILD_CONFIGURATION} --runtime linux-x64 -p:PublishReadyToRun=true -p:PublishReadyToRunShowWarnings=true
+	chmod +x ${BUILD_DIR}/${OUTPUT_DIR}/${PROJECT_NAME}
+done
 
 if [ -f ${BUILD_DIR}/Procfile ]; then
 	topic "WARNING"
